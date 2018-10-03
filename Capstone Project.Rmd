@@ -1,0 +1,219 @@
+---
+title: "Capstone Project"
+author: "Praneeth"
+date: "October 3, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Install Libraries
+
+```{r}
+library(dplyr)
+library(tidyverse)
+```
+
+## Input Data
+
+```{r}
+source("functions_and_data.R")
+
+calls <- readRDS("data/rdas/calls.rda")
+call_incdnt <- readRDS("data/rdas/call_incdnt.rda")
+incdnts <- readRDS("data/rdas/incdnts.rda")
+call_actv <- readRDS("data/rdas/call_actv.rda")
+call_actv_typ <- readRDS("data/rdas/call_actv_typ.rda")
+call_assoc <- readRDS("data/rdas/call_assoc.rda")
+sls_lines <- readRDS("data/rdas/sls_lines.rda")
+wrk_grp <- readRDS("data/rdas/wrk_grp.rda")
+
+```
+
+## Join Datasets & EDA
+
+```{r}
+#09/26
+
+View(calls)
+summary(calls$call_typ_cd)
+str(calls$call_typ_cd)
+calls_Inbounce <- subset(calls, call_typ_cd == "Inbound ")
+View(calls_Inbounce)
+summary(calls$call_start_dttm)
+Date<- format(as.POSIXct(strptime(calls_Inbounce$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
+Hour<- format(as.POSIXct(strptime(calls_Inbounce$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d %H")
+calls_Inbounce$ds <- Date
+calls_Inbounce$hour <- Hour
+Hour<-format(as.POSIXct(strptime(calls_Inbounce$hour,"%Y-%m-%d %H",tz="")) ,format = "%Y-%m-%d %H:%M:%S")
+calls_Inbounce$hour <- Hour
+View(calls_Inbounce)
+ts <- calls_Inbounce %>%
+  group_by(Date) %>%
+  summarise(y = n())
+ts
+
+ts2014 <- subset(ts, ds <= as.POSIXct('2014-12-31  '))
+ts2015 <- subset(ts, ds > as.POSIXct('2014-12-31 '))
+
+# prophet
+m <- prophet(ts, seasonality.mode = 'multiplicative',
+             changepoint.prior.scale = 0.01)
+future <- make_future_dataframe(m, periods = 365)
+tail(future)
+forecast <- predict(m, future)
+tail(forecast[c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
+plot(m, forecast) + add_changepoints_to_plot(m)
+prophet_plot_components(m, forecast)
+df.cv <- cross_validation(m, initial = 180, period = 45, horizon = 90, units = 'days')
+head(df.cv)
+df.p <- performance_metrics(df.cv)
+head(df.p)
+plot_cross_validation_metric(df.cv, metric = 'mape')
+
+#with assoc_party_id in each call_id
+#Above is average call_duration time by day, month, workgroup and associate party
+call_dur <-left_join(calls, call_assoc, by = "call_id")
+Date<- format(as.POSIXct(strptime(call_dur$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
+Month<- format(as.POSIXct(strptime(call_dur$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m")
+Month<- format(as.POSIXct(strptime(Month,"%Y-%m",tz="")) ,format = "%Y-%m-%d")
+call_dur$date <- Date
+call_dur$month <- Month
+summary(call_dur)
+
+call_dur_day <- call_dur %>%
+  group_by(date) %>%
+  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
+
+call_dur_asso <- call_dur %>%
+  group_by(assoc_party_id) %>%
+  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
+
+call_dur_month <- call_dur %>%
+  group_by(month) %>%
+  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
+
+call_dur_workgroup <- call_dur %>%
+  group_by(wrk_grp_id) %>%
+  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
+
+#The number of call by day, month
+Date<- format(as.POSIXct(strptime(calls$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
+Month<- format(as.POSIXct(strptime(calls$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m")
+calls$date <- Date
+calls$month<- Month
+
+call_day <- calls %>%
+  group_by(date) %>%
+  summarise(y = n())
+
+ggplot(call_day, aes(call_day$date,call_day$y))+
+  geom_point()
+
+call_month <- calls %>%
+  group_by(month) %>%
+  summarise(y = n())
+call_month
+ggplot(call_month, aes(call_month$month,call_month$y))+
+  geom_line()
+
+# number of calls per incident
+incident_combined <-left_join(call_incdnt, calls, by = "call_id")
+call_per_incident <- call_incident_combined %>%
+  group_by(incdnt_id) %>%
+  summarise(number_of_calls = n())
+
+# number of incidents per call
+call_combined <-left_join(calls, call_incdnt, by = "call_id")
+incident_per_call <- call_incident_combined %>%
+  group_by(call_id) %>%
+  summarise(number_of_incident = n())
+
+```
+
+## Code from Daniel
+
+```{r}
+calls <- readRDS("data/rdas/calls.rda")
+
+daily_ib_calls_2014 <- calls %>% 
+  filter(year(call_start_dttm) == 2014) %>% 
+  count(dt = floor_date(call_start_dttm, "1 day"))
+
+daily_ib_calls %>% 
+  ggplot(aes(dt, n)) +
+  geom_line()
+
+daily_ib_calls %>% 
+  mutate(weekend_ind = if_else(wday(dt) %in% c(7,1), "Weekend", "Weekday")) %>% 
+  ggplot(aes(dt, n, color = weekend_ind)) +
+  geom_line()
+
+#Create a dataset of daily calls for 2014 and 2015 and align on day of week
+yoy <- calls %>% 
+  transmute(yr = year(call_start_dttm),
+            dt = floor_date(call_start_dttm, "1 day"),
+            dt = if_else(yr == 2014, dt + years(1) - days(1), dt) %>% ymd
+  ) %>% 
+  count(yr, dt) %>% 
+  spread(yr, n) %>% 
+  mutate(err = `2015` - `2014`,
+         abs_err = abs(err),
+         abs_perc_err = round(abs_err / `2015`, 3) * 100
+  ) %>% 
+  select(-`2014`, -`2015`) %>% 
+  gather(key, value, -dt)
+
+#Compare ME, MAE, and MAPE
+yoy %>% 
+  ggplot(aes(dt, value, color = key)) +
+  geom_line() +
+  facet_grid(key~., scales = "free_y")
+
+#Identify days with abnormally large perc error - holidays?
+yoy %>% 
+  filter(key == "abs_perc_err") %>% 
+  mutate(label = ifelse(value >= 40, dt, NA)) %>% 
+  ggplot(aes(dt, 
+             value, 
+             label = label %>% 
+               as.Date(origin = "1970-01-01") %>% 
+               format("%b-%d")
+  )
+  ) +
+  geom_line() +
+  geom_text(color = "red") +
+  coord_cartesian(ylim = c(0,100)) +
+  scale_y_continuous(expand = c(0,0),
+                     breaks = seq(0, 100, 20),
+                     minor_breaks = seq(0, 100, 5)
+  )
+
+# If we exclude a few extraordinary days where holidays are misaligned, average error is under 800 calls/day if we only use 2014 inbound call count to predict 2015 call count and nothing else.  Holidays can obviously be adjusted and a trend can be applied.
+
+yoy %>% 
+  filter(key == "abs_err") %>% 
+  ggplot(aes(dt, 
+             value
+  )
+  ) +
+  geom_line() +
+  geom_hline(yintercept = yoy %>% 
+               filter(key == "abs_err",
+                      value < 3000
+               ) %>% 
+               {mean(.$value)},
+             color = "red",
+             linetype = "dashed"
+  ) +
+  scale_y_continuous("Number of Calls (Error)",
+                     expand = c(0,0),
+                     breaks = seq(0,12000, 1000),
+                     minor_breaks = seq(0,12000, 500)
+  ) +
+  scale_x_date(element_blank(),
+               date_minor_breaks = "1 month"
+  )
+```
