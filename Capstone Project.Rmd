@@ -218,6 +218,7 @@ yoy %>%
   )
 ```
 
+## Naive Model
 ```{r mean model building}
 
 #mean model by year - no data split
@@ -298,3 +299,4 @@ mean(calls2015num$change) #2734.126 Mean absolute error
 #data split 50/50 on 2014 train to predict 2015 2734.126
 
 ```
+
