@@ -217,4 +217,86 @@ yoy %>%
                date_minor_breaks = "1 month"
   )
 ```
-test!
+
+## Naive Model
+```{r mean model building}
+
+#mean model by year - no data split
+calls2014 <- subset(calls, call_start_dttm <= as.POSIXct('2014-12-31 23:00'))
+calls2015 <- subset(calls, call_start_dttm >= as.POSIXct('2014-12-31 23:00'))
+
+nrow(calls2014)
+# 2582385/365 = 7075.027
+nrow(calls2015) #2810484/365 = 7699.956
+
+Date<- format(as.POSIXct(strptime(calls2015$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
+
+calls2015$date <- Date
+
+calls2015num <- calls2015 %>%
+ group_by(calls2015$date) %>%
+ summarise(y = n())
+
+calls2015num$predicted <- 7075.027 # make new column 
+head(calls2015num)
+
+calls2015num$change <- abs(calls2015num$y - calls2015num$predicted)
+
+mean(calls2015num$change) #2726.725 Mean absolute error
+
+
+#take test and train dataset mean model with data split
+
+set.seed(100)
+rows <- createDataPartition(calls2014$call_id, p = .5, list = FALSE)
+train <- calls2014[rows, ]
+test <- calls2014[-rows, ]
+
+Date<- format(as.POSIXct(strptime(train$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
+
+train$date <- Date
+
+trainnum <- train %>%
+ group_by(train$date) %>%
+ summarise(y = n())
+
+View(trainnum)
+mean(trainnum$y)#3527.85 because this figure represents 50% of the data, we take 3527.85/.5 = 7055.70 to approximate the rest of the data. 
+
+#compare 2014 train to test
+Date<- format(as.POSIXct(strptime(test$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
+
+test$date <- Date
+
+testnum <- test %>%
+ group_by(test$date) %>%
+ summarise(y = n())
+testnum$predicted <- 3527.85 # make new column 
+head(testnum)
+testnum$change <- abs(testnum$y - testnum$predicted)
+
+mean(testnum$change) #1146.314 Mean absolute error times 2 because this is half the data 2292.628
+
+#compare 2014 train to 2015 whole
+
+Date<- format(as.POSIXct(strptime(calls2015$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
+
+calls2015$date <- Date
+
+calls2015num <- calls2015 %>%
+ group_by(calls2015$date) %>%
+ summarise(y = n())
+calls2015num$predicted <- 7055.70 # make new column 
+head(calls2015num)
+calls2015num$change <- abs(calls2015num$y - calls2015num$predicted)
+
+mean(calls2015num$change) #2734.126 Mean absolute error
+
+#Mean Model
+#Summary of MAE
+#no data split 2014 to predict 2015 2726.725
+#data split 50/50 of 2014 one half to predict the other half 2292.628
+#data split 50/50 on 2014 train to predict 2015 2734.126
+
+```
+
