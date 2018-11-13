@@ -1,0 +1,63 @@
+Overstock.com MSBA Capstone Fall 2018
+Call Center Staffing Forecast
+
+Business Problem and Project Goal
+Overstock.com, Inc. is an internet retailer based in Midvale, UT. The company was founded in 1997 and launched in 1999. It has experienced tremendous growth over the last twenty plus years. As the company has grown, so too have its customer support staffing needs.  
+Customer support for overstock is managed primarily through call centers. These call centers require both accurate staff forecasting and optimization to effectively manage resources and reduce costs for contract overages. Overstock has three call center locations to manage customer support: Midvale, UT, North Salt Lake, UT, and Evergreen, WA. Overstock has specified that the acceptable range for forecasting error be between 85% and 110% of actual contracted staffing levels— with a preference for an overestimation of staffing needs.
+The goal of this capstone project is to help Overstock determine call-center staffing needs for Overstock’s solutions and escalations teams on a day-to-day basis for the historical period of Q1 and Q2, 2016, based on call demand and discover insights to optimize customer support operations.This project will focus exclusively on the two Utah call center locations. Additionally, while there are multiple customer interaction channels, the scope of this project will focus on phone call data. However, if time permits, additional projections may be supplied for all remaining communication channels: emails, online chat, and SMS messages. Ideally, this project would beat 3rd-party vendor estimates.
+Analytics Problem
+
+There are 3 primary areas of focus for this project: contact forecasting, schedule optimization, and demand forecasting.
+
+The number of calls recieved per day and by shift needs to be anticipated by managers in order to properly staff call centers for the day. 
+Contact Forecasting
+This analysis answers the following questions: 
+How many contacts will Overstock receive per day?
+How many agents will we need on the floor each shift? 
+How many agents do we need on staff each month, based on predicted contacts?
+
+Deliverables: 
+How many FTEs should be on staff?
+How many associates should work per day?
+How many associates should work per shift per day?
+
+Each question will require a prediction for two working groups: solutions and escalations.
+
+Analytics Problem 
+
+The data utilized in this project is detailed information on calls, incidents, and transactions from 2014 and 2015. A time-series analysis is employed to predict the number of calls recieved. 
+
+The benchmark for success in this project is that our predictions will be within the acceptable range more often than the vendor prediction or will be closer to the center of the acceptable range than the vendor’s prediction. Given 2014 and 2015 data, this project will predict and compare performance against Q1 and Q2, 2016 data.
+ 
+
+
+
+Project Timeline 
+Project start: August 8 
+
+                                                  
+Project Deliverables and Dates
+Project start: August 8, 2018
+Weekly team meeting: Monday, 4:00 PM
+Access to Teradata data:  September 1, 2018
+Datasets joined and cleaned: October 15, 2018
+Statistical analysis/forecasting analysis completed: November 15, 2018
+Final presentation to sponsor: December 7, 2018
+Final report completed: December 7, 2018
+Final report, commented R code, presentation slides to sponsor: December 7, 2018
+ 
+Risks and Assumptions
+
+Risks:
+Missing or erroneous data leading to misleading analysis and inaccurate predictive model.
+Data volume limit has to be manageable in order to avoid risk of maxing out disk space.
+
+Assumptions:
+Data for analysis will be provided by Overstock
+Overstock contact will be available to answer questions that arise about the data
+Use open source R statistical software. Any additional requirement for tools to manage data volume will be arranged between Overstock and the project team.
+Scope of the project can be modified based on mutual consent between sponsors and project team.
+
+
+
+
