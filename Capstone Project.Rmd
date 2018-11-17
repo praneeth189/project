@@ -300,3 +300,42 @@ mean(calls2015num$change) #2734.126 Mean absolute error
 
 ```
 
+## Create Test, Train datasets & build Auto-ARIMA model
+```{r}
+call_day_2014 <- calls2014 %>%
+  group_by(date) %>%
+  summarise(y = n())
+
+call_day_2014<- call_day_2014[1:365,]
+
+call_day_2015full <- calls2015 %>%
+  group_by(date) %>%
+  summarise(y = n())
+
+# Couldn't sort as date is chr, so split the data, add and combine later
+# call_day_2015[with(call_day_2015, order(date)),]
+
+# split data
+call_day_2015sub1 <- call_day_2015full[1:196,]
+call_day_2015sub2 <- call_day_2015full[197:363,]
+
+newrow1<-data.frame(date='2015-07-16', y= (filter(call_day_2014, date == "2014-07-17")$y))
+newrow2<-data.frame(date='2015-07-17', y= (filter(call_day_2014, date == "2014-07-18")$y))
+
+call_day_2015 <- rbind(call_day_2015sub1,newrow1)
+call_day_2015 <- rbind(call_day_2015,newrow2)
+call_day_2015 <- rbind(call_day_2015,call_day_2015sub2)
+
+arima2014 <- call_day_2014[,2]
+arimadata2014 <- ts(arima2014)
+
+fit <- auto.arima(arimadata2014, seasonal = TRUE)
+summary(fit) #Train MAE = 1942
+
+xyz<-predict(fit, 365)
+call_day_2015$predict <- xyz$pred
+
+ArimaMAE <- mean(abs(call_day_2015$y - call_day_2015$predict))
+ArimaMAE #Test MAE = 2448
+
+```
