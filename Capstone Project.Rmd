@@ -108,7 +108,7 @@ calls$month<- Month
 call_day <- calls %>%
   group_by(date) %>%
   summarise(y = n())
-
+# Calls trend by date
 ggplot(call_day, aes(call_day$date,call_day$y))+
   geom_point()
 
@@ -116,20 +116,22 @@ call_month <- calls %>%
   group_by(month) %>%
   summarise(y = n())
 call_month
+# Calls by month not working
 ggplot(call_month, aes(call_month$month,call_month$y))+
   geom_line()
 
 # number of calls per incident
-incident_combined <-left_join(call_incdnt, calls, by = "call_id")
+call_incident_combined <-left_join(call_incdnt, calls, by = "call_id")
 call_per_incident <- call_incident_combined %>%
   group_by(incdnt_id) %>%
   summarise(number_of_calls = n())
+summary(incident_per_call) # Mean = 1.201
 
 # number of incidents per call
-call_combined <-left_join(calls, call_incdnt, by = "call_id")
 incident_per_call <- call_incident_combined %>%
   group_by(call_id) %>%
   summarise(number_of_incident = n())
+summary(incident_per_call) # Mean = 1.509
 
 ```
 
