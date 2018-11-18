@@ -361,9 +361,8 @@ ggplot(callsbyday, aes(x=weekday, y=y)) + stat_summary(fun.y="mean", geom="bar")
 
 
 #*** Average calls per day of week
-ggplot(call_day, aes(x=factor(dayofweek), y=count)) + stat_summary(fun.y="mean", geom="bar") + ggtitle("Average calls per day")
-+ labs(y="Number of Calls per day", x = "Day of Week") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-panel.background = element_blank(), axis.line = element_line(colour = "black"))
+ggplot(call_day, aes(x=factor(dayofweek), y=count)) + stat_summary(fun.y="mean", geom="bar") + ggtitle("Average Calls per Day by Day of Week")+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black")) + xlab("Day of Week") + ylab("Number of Calls per Day") + scale_x_discrete(labels=c("1" = "Sunday", "2" = "Monday", "3" = "Tuesday", "4" = "Wednesday", "5" = "Thursday", "6" = "Friday", "7" = "Saturday"))
 
 #*** Average calls per day in month
 ggplot(call_day, aes(x=factor(month), y=count)) + stat_summary(fun.y="mean", geom="bar")+ ggtitle("Average Calls per Month") + labs(y="Number of Calls per day", x = "Month") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
