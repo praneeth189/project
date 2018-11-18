@@ -73,32 +73,6 @@ df.p <- performance_metrics(df.cv)
 head(df.p)
 plot_cross_validation_metric(df.cv, metric = 'mape')
 
-#with assoc_party_id in each call_id
-#Above is average call_duration time by day, month, workgroup and associate party
-call_dur <-left_join(calls, call_assoc, by = "call_id")
-Date<- format(as.POSIXct(strptime(call_dur$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
-Month<- format(as.POSIXct(strptime(call_dur$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m")
-Month<- format(as.POSIXct(strptime(Month,"%Y-%m",tz="")) ,format = "%Y-%m-%d")
-call_dur$date <- Date
-call_dur$month <- Month
-summary(call_dur)
-
-call_dur_day <- call_dur %>%
-  group_by(date) %>%
-  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
-
-call_dur_asso <- call_dur %>%
-  group_by(assoc_party_id) %>%
-  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
-
-call_dur_month <- call_dur %>%
-  group_by(month) %>%
-  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
-
-call_dur_workgroup <- call_dur %>%
-  group_by(wrk_grp_id) %>%
-  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
-
 #The number of call by day, month
 Date<- format(as.POSIXct(strptime(calls$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
 Month<- format(as.POSIXct(strptime(calls$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m")
@@ -342,23 +316,16 @@ ArimaMAE #Test MAE = 2448
 
 ```
 
-# Visualizations
+# Visualizations - Calls
 ```{r}
 # Calls by day of week
 callsbyday <- rbind(call_day_2014,call_day_2015)
-
-
-
-
 
 callsbyday$weekday <- weekdays(as.Date(callsbyday$date))
 callsbyday$weekday <- factor(callsbyday$weekday)
 # levels(callsbyday$weekday) <- c('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')
 
 ggplot(callsbyday, aes(x=weekday, y=y)) + stat_summary(fun.y="mean", geom="bar")
-
-# Calls by month
-
 
 #*** Average calls per day of week
 ggplot(call_day, aes(x=factor(dayofweek), y=count)) + stat_summary(fun.y="mean", geom="bar") + ggtitle("Average calls per day")
@@ -368,3 +335,62 @@ panel.background = element_blank(), axis.line = element_line(colour = "black"))
 #*** Average calls per day in month
 ggplot(call_day, aes(x=factor(month), y=count)) + stat_summary(fun.y="mean", geom="bar")+ ggtitle("Average Calls per Month") + labs(y="Number of Calls per day", x = "Month") + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
 panel.background = element_blank(), axis.line = element_line(colour = "black"))
+```
+# Visualizations - Call duration
+```{r}
+#with assoc_party_id in each call_id
+# is average call_duration time by day, month, workgroup and associate party
+call_dur <-left_join(calls, call_assoc, by = "call_id")
+Date<- format(as.POSIXct(strptime(call_dur$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
+Month<- format(as.POSIXct(strptime(call_dur$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m")
+Month<- format(as.POSIXct(strptime(Month,"%Y-%m",tz="")) ,format = "%Y-%m-%d")
+call_dur$date <- Date
+call_dur$month <- Month
+summary(call_dur)
+
+call_dur_day <- call_dur %>%
+  group_by(date) %>%
+  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
+
+call_dur_asso <- call_dur %>%
+  group_by(assoc_party_id) %>%
+  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
+
+call_dur_month <- call_dur %>%
+  group_by(month) %>%
+  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
+
+call_dur_workgroup <- call_dur %>%
+  group_by(wrk_grp_id) %>%
+  summarise_at(vars(assoc_durtn_tm), funs(mean(., na.rm=TRUE)))
+  
+# Add date Indicators
+call_dur_day$dayofweek <- weekdays(as.Date(call_dur_day$date))
+call_dur_day$month <- months(as.Date(call_dur_day$date))
+call_dur_day$date <-as.Date(call_dur_day$date)
+str(call_dur_day)
+call_dur_day$holiday <- ifelse(call_dur_day$date %in% holiday1415, 1, 0)
+
+# linechart and ordered (month)
+ggplot(call_dur_day, aes(x=factor(month), y=assoc_durtn_tm)) +
+  stat_summary(fun.y="mean", geom="bar") +
+  ggtitle("Average calls per day") +
+  labs(y="Number of Calls per day", x = "Day of Week")
+
+ggplot(call_dur_day, aes(x=factor(holiday), y=assoc_durtn_tm)) +
+  stat_summary(fun.y="mean", geom="bar") +
+  ggtitle("Average calls per day") +
+  labs(y="Number of Calls per day", x = "Day of Week")
+
+# Call duration by work group names
+call_dur_wrkgrp <- left_join(call_dur_workgroup, wrk_grp, by = "wrk_grp_id")
+ggplot(call_dur_wrkgrp, aes(x=factor(wrk_grp_desc), y=assoc_durtn_tm)) +
+  stat_summary(fun.y="mean", geom="bar") +
+  ggtitle("Average calls per day") +
+  labs(y="Number of Calls per day", x = "Day of Week")
+
+# no. of calls by wrk grp
+#calls_workgroup <- call_dur %>%
+  group_by(wrk_grp_id) %>%
+  count(unique(call_id))
+  
