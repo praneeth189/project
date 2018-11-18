@@ -341,3 +341,16 @@ ArimaMAE <- mean(abs(call_day_2015$y - call_day_2015$predict))
 ArimaMAE #Test MAE = 2448
 
 ```
+
+# Visualizations
+```{r}
+# Calls by day of week
+callsbyday <- rbind(call_day_2014,call_day_2015)
+
+callsbyday$weekday <- weekdays(as.Date(callsbyday$date))
+callsbyday$weekday <- factor(callsbyday$weekday)
+# levels(callsbyday$weekday) <- c('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')
+
+ggplot(callsbyday, aes(x=weekday, y=y)) + stat_summary(fun.y="mean", geom="bar")
+
+# Calls by month
