@@ -393,3 +393,13 @@ ggplot(call_dur_wrkgrp, aes(x=factor(wrk_grp_desc), y=assoc_durtn_tm)) +
   group_by(wrk_grp_id) %>%
   count(unique(call_id))
   
+  
+  ggplot(call_day, aes(x=date, y=count, color = year)) + geom_point() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))+ labs(y = "count") +
+geom_hline(yintercept=7075.027) + scale_x_discrete(labels=c("002" = "Feb", "004" = "Apr", "006" = "June", "008" = "Aug", "0010" = "Oct", "0012" = "Dec"))
+
+
+##Average number of calls separted by year.  Need to fix labels on x axis. Want to add label to horizontal line.  Upper line is 2014 weekday average.  Lower line is 2014 weekend average
+ ggplot(call_day, aes(x=date, y=count, color = year)) + geom_point() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))+ labs(y = "count") +
+geom_hline(yintercept=8453.111) + geom_hline(yintercept= 3616.163)+ facet_wrap(vars(year))+ scale_x_discrete(labels=c("002" = "Feb", "004" = "Apr", "006" = "June", "008" = "Aug", "0010" = "Oct", "0012" = "Dec"))
