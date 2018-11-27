@@ -195,6 +195,55 @@ ggplot(callsbyday, aes(x=date, y=y, color = year)) +
    scale_x_discrete(labels=c("002" = "Feb", "004" = "Apr", "006" = "June", "008" = "Aug", "0010" = "Oct", "0012" = "Dec"))
 ```
 
+## Lagged Naive Models
+```{r}
+#Created lags
+library(DataCombine)
+callsbyday$date<-as.Date(callsbyday$date,"%Y-%m-%d")
+laggedcalls<-as.data.frame(callsbyday)
+laggedcalls <- slide(laggedcalls, "y", NewVar = "ylag1", slideBy = -1)
+laggedcalls <- slide(laggedcalls, "y", NewVar = "ylagyear", slideBy = -364)
+
+#Extracted 2015
+lagged2015<-subset(laggedcalls, date>=as.POSIXct('2015-01-01'))
+
+#Errors for both models
+lagged2015$lag1error<-lagged2015$y-lagged2015$ylag1
+lagged2015$lagyearerror<-lagged2015$y-lagged2015$ylagyear
+
+#RMSE for both models
+lag1RMSE<-sqrt(mean(lagged2015$lag1error^2))
+lagyearRMSE<-sqrt(mean(lagged2015$lagyearerror^2))
+
+#Percent Error
+lagged2015$lag1pcterror<-lagged2015$lag1error/lagged2015$y
+lagged2015$lagyearpcterror<-lagged2015$lagyearerror/lagged2015$y
+
+#MAPE
+lag1MAPE<-mean(abs(lagged2015$lag1pcterror))
+lagyearMAPE<-mean(abs(lagged2015$lagyearpcterror))
+
+#Plotting 1-day Lagged Forecast
+ggplot(lagged2015, aes(date, y))+
+ geom_line()+
+ geom_line(aes(y=ylag1), color= "red")+
+ ggtitle("1-Day Lagged Naive Model")+
+ xlab("Date")+
+ ylab("Number of Calls")+
+ theme_minimal()+
+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+#Plotting 1-Year Lagged Forecast
+ggplot(lagged2015, aes(date, y))+
+ geom_line()+
+ geom_line(aes(y=ylagyear), color= "blue")+
+ ggtitle("1-Year Lagged Naive Model")+
+ xlab("Date")+
+ ylab("Number of Calls")+
+ theme_minimal()+
+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+```
+ 
 ## Code from Daniel
 ```{r}
 calls <- readRDS("data/rdas/calls.rda")
