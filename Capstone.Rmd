@@ -130,8 +130,11 @@ summary(fit) #Train MAE = 1942
 xyz<-predict(fit, 365)
 call_day_2015$predict <- xyz$pred
 
-ArimaMAE <- mean(abs(call_day_2015$y - call_day_2015$predict))
-ArimaMAE #Test MAE = 2448
+
+RMSE(call_day_2015$y, call_day_2015$predict)
+MAE(call_day_2015$y, call_day_2015$predict)
+round(MAPE(call_day_2015$y, call_day_2015$predict), 2)
+
 ```
 
 # Prophet model
@@ -185,9 +188,10 @@ MAE(tsprediction1$yhat,tsprediction1$y)
 forecast1$ds <-as_date(forecast1$ds)
 tsprediction1 <- merge(x=forecast1,y=call2015,by="ds")
 
-RMSE(tsprediction1$yhat,tsprediction1$y)
+round(RMSE(tsprediction1$yhat,tsprediction1$y))
 MAE(tsprediction1$yhat,tsprediction1$y)
-MAPE(tsprediction1$yhat,tsprediction1$y)
+round(MAPE(tsprediction1$yhat,tsprediction1$y),2)
+
 ```
 
 # EDA/Visualizations - Calls
