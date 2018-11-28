@@ -287,11 +287,13 @@ holiday1415 <- as.Date(c("2014-01-01", "2014-01-20","2014-02-14", "2014-02-17", 
 call_dur_day$holiday <- ifelse(call_dur_day$date %in% holiday1415, 1, 0)
 str(call_dur_day)
 
-#*** change this to linechart and order by month
-ggplot(call_dur_day, aes(x=factor(month), y=assoc_durtn_tm)) +
+# Call duration by Month
+call_dur_day$month <- factor(call_dur_day$month, levels = c('January','February','March','April','May','June','July','August','September','October','November','December'))
+ggplot(call_dur_day, aes(x=month, y=assoc_durtn_tm)) +
   stat_summary(fun.y="mean", geom="bar") +
   ggtitle("Avg. call duration per day by Month") +
-  labs(y="Call duration per day", x = "Month")
+  labs(y="Call duration per day", x = "Month") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 ggplot(call_dur_day, aes(x=factor(holiday), y=assoc_durtn_tm)) +
   stat_summary(fun.y="mean", geom="bar") +
@@ -303,11 +305,12 @@ wrk_grp <- readRDS("data/rdas/wrk_grp.rda")
 
 call_dur_wrkgrp <- left_join(call_dur_workgroup, wrk_grp, by = "wrk_grp_id")
 
-#***remove unnecessary work groups
+# Call duration by work group
 ggplot(call_dur_wrkgrp, aes(x=factor(wrk_grp_desc), y=assoc_durtn_tm)) +
   stat_summary(fun.y="mean", geom="bar") +
   ggtitle("Avg. call duration per day by Work Group") +
-  labs(y="Call duration per day", x = "Work Group")
+  labs(y="Call duration per day", x = "Work Group") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 ```
  
