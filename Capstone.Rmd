@@ -25,6 +25,10 @@ library(prophet)
 library(data.table)
 library(ggplot2)
 library(forecast)
+library(DataCombine)
+library(Metrics)
+library(timeDate)
+library(MLmetrics)
 ```
 
 ## Data Prep (Create Test, Train datasets)
@@ -130,8 +134,7 @@ summary(fit) #Train MAE = 1942
 xyz<-predict(fit, 365)
 call_day_2015$predict <- xyz$pred
 
-
-RMSE(call_day_2015$y, call_day_2015$predict)
+round(RMSE(call_day_2015$y, call_day_2015$predict))
 MAE(call_day_2015$y, call_day_2015$predict)
 round(MAPE(call_day_2015$y, call_day_2015$predict), 2)
 
@@ -164,9 +167,10 @@ USholiday <- data_frame(
 m <- prophet(holidays = USholiday,
             seasonality.mode = 'multiplicative',
             changepoint.prior.scale = 0.05)
-m <- add_seasonality(m, 'yearly', period = 356, fourier.order = 8, mode = 'additive')
+m <- add_seasonality(m, 'yearly', period = 365, fourier.order = 8, mode = 'multiplicative')
+
 m <- fit.prophet(m, call2014)
-future <- make_future_dataframe(m, periods = 356)
+future <- make_future_dataframe(m, periods = 365)
 forecast1 <- predict(m, future)
 tail(forecast1[c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
 plot(m, forecast1) + add_changepoints_to_plot(m)
@@ -285,28 +289,6 @@ ggplot(call_dur_wrkgrp, aes(x=factor(wrk_grp_desc), y=assoc_durtn_tm)) +
   ggtitle("Avg. call duration per day by Work Group") +
   labs(y="Call duration per day", x = "Work Group")
 
-# no. of calls by wrk grp
-#calls_workgroup <- call_dur %>%
-  group_by(wrk_grp_id) %>%
-  count(unique(call_id))
-  
-#***Add year column to callsbyday and Need to fix labels on x axis
-ggplot(callsbyday, aes(x=date, y=y, color = year)) +
-  geom_point() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) +
-  labs(y = "count") +
-  geom_hline(yintercept=7075.027) +
-  scale_x_discrete(labels=c("002" = "Feb", "004" = "Apr", "006" = "June", "008" = "Aug", "0010" = "Oct", "0012" = "Dec"))
-
-##Average number of calls separted by year.  Need to fix labels on x axis. Want to add label to horizontal line.  Upper line is 2014 weekday average.  Lower line is 2014 weekend average
- ggplot(callsbyday, aes(x=date, y=y, color = year)) +
-   geom_point() +
-   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) +
-   labs(y = "count") +
-   geom_hline(yintercept=8453.111) +
-   geom_hline(yintercept= 3616.163) +
-   facet_wrap(vars(year)) +
-   scale_x_discrete(labels=c("002" = "Feb", "004" = "Apr", "006" = "June", "008" = "Aug", "0010" = "Oct", "0012" = "Dec"))
 ```
  
 ## Code from Daniel
