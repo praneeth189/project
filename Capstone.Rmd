@@ -220,28 +220,28 @@ round(MAPE(tsprediction1$yhat,tsprediction1$y),2)
 
 # EDA/Visualizations - Calls
 ```{r}
-# Calls by day of week
+# Average calls per day of week
 callsbyday$dayofweek <- weekdays(as.Date(callsbyday$date))
-callsbyday$dayofweek <- factor(callsbyday$dayofweek)
-callsbyday$month <- months(as.Date(callsbyday$date))
 
-ggplot(callsbyday, aes(x=dayofweek, y=y)) +
-  stat_summary(fun.y="mean", geom="bar")
+callsbyday$dayofweek <- factor(callsbyday$dayofweek, levels = c('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'))
 
-# Average calls per day of week (***need to order by day of week)
 ggplot(callsbyday, aes(x=factor(dayofweek), y=y)) +
   stat_summary(fun.y="mean", geom="bar") +
   ggtitle("Avg. Calls per Day by Day of Week")+
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) +
   xlab("Day of Week") +
   ylab("Number of Calls per Day")
 
-# Average calls per day in month (***need to order by month)
-ggplot(callsbyday, aes(x=factor(month), y=y)) +
+# Average calls per day in month
+callsbyday$month <- months(as.Date(callsbyday$date))
+
+callsbyday$month <- factor(callsbyday$month, levels = c('January','February','March','April','May','June','July','August','September','October','November','December'))
+
+ggplot(callsbyday, aes(x=month, y=y)) +
   stat_summary(fun.y="mean", geom="bar") +
   ggtitle("Avg. Calls per day by Month") +
   labs(y="Number of Calls per day", x = "Month") +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 ```
 
