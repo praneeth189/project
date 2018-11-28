@@ -134,6 +134,62 @@ ArimaMAE <- mean(abs(call_day_2015$y - call_day_2015$predict))
 ArimaMAE #Test MAE = 2448
 ```
 
+# Prophet model
+```{r}
+ts_calls <- callsbyday
+
+colnames(ts_calls)[colnames(ts_calls) == 'date'] <- 'ds'
+ts_calls$ds <-as_date(ts_calls$ds)
+summary(ts_calls$ds)
+
+call2014 <- subset(ts_calls, ds <= as.POSIXct('2014-12-31'))
+call2015 <- subset(ts_calls, ds > as.POSIXct('2014-12-31 '))
+
+USholiday <- data_frame(
+ holiday = 'USholiday',
+ ds = as.Date(c("2014-01-01", "2014-01-20","2014-02-14", "2014-02-17",
+                "2014-05-26", "2014-07-04", "2014-09-01", "2014-10-13",
+                "2014-11-11", "2014-11-27", "2014-12-25", "2015-01-01",
+                "2015-01-19", "2015-02-14", "2015-02-16", "2015-05-25",
+                "2015-07-03", "2015-09-07", "2015-10-12", "2015-11-11",
+                "2015-11-26", "2015-12-25")),
+ lower_window = 0,
+ upper_window = 1
+)
+
+#Use one year data
+m <- prophet(holidays = USholiday,
+            seasonality.mode = 'multiplicative',
+            changepoint.prior.scale = 0.05)
+m <- add_seasonality(m, 'yearly', period = 356, fourier.order = 8, mode = 'additive')
+m <- fit.prophet(m, call2014)
+future <- make_future_dataframe(m, periods = 356)
+forecast1 <- predict(m, future)
+tail(forecast1[c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
+plot(m, forecast1) + add_changepoints_to_plot(m)
+prophet_plot_components(m, forecast1)
+df.cv <- cross_validation(m, initial = 180, period = 45, horizon = 30, units = 'days')
+head(df.cv)
+df.p <- performance_metrics(df.cv)
+head(df.p)
+plot_cross_validation_metric(df.cv, metric = 'mape')
+
+#RMSE FOR THE TS2014(TRAINING DATA)
+forecast1$ds <-as_date(forecast1$ds)
+tsprediction1 <- merge(x=forecast1,y=call2014,by="ds")
+
+RMSE(tsprediction1$yhat,tsprediction1$y)
+MAE(tsprediction1$yhat,tsprediction1$y)
+
+#RMSE FOR THE TS2015(TESTING DATA)
+forecast1$ds <-as_date(forecast1$ds)
+tsprediction1 <- merge(x=forecast1,y=call2015,by="ds")
+
+RMSE(tsprediction1$yhat,tsprediction1$y)
+MAE(tsprediction1$yhat,tsprediction1$y)
+MAPE(tsprediction1$yhat,tsprediction1$y)
+```
+
 # EDA/Visualizations - Calls
 ```{r}
 # Calls by day of week
@@ -402,63 +458,13 @@ mean(calls2015num$change) #2734.126 Mean absolute error
 
 ```
 
-## prophet
-```{r}
-View(calls)
-summary(calls$call_typ_cd)
-str(calls$call_typ_cd)
-
-calls_Inbounce <- subset(calls, call_typ_cd == "Inbound ")
-View(calls_Inbounce)
-summary(calls$call_start_dttm)
-
-Date<- format(as.POSIXct(strptime(calls_Inbounce$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
-Hour<- format(as.POSIXct(strptime(calls_Inbounce$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d %H")
-calls_Inbounce$ds <- Date
-calls_Inbounce$hour <- Hour
-Hour<-format(as.POSIXct(strptime(calls_Inbounce$hour,"%Y-%m-%d %H",tz="")) ,format = "%Y-%m-%d %H:%M:%S")
-calls_Inbounce$hour <- Hour
-View(calls_Inbounce)
-
-ts <- calls_Inbounce %>%
-  group_by(Date) %>%
-  summarise(y = n())
-ts
-
-#need to change 'm' accordingly for the below prophet code to run
-
-m <- prophet(ts, seasonality.mode = 'multiplicative',
-             changepoint.prior.scale = 0.01)
-future <- make_future_dataframe(m, periods = 365)
-tail(future)
-forecast <- predict(m, future)
-tail(forecast[c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
-plot(m, forecast) + add_changepoints_to_plot(m)
-prophet_plot_components(m, forecast)
-df.cv <- cross_validation(m, initial = 180, period = 45, horizon = 90, units = 'days')
-head(df.cv)
-df.p <- performance_metrics(df.cv)
-head(df.p)
-plot_cross_validation_metric(df.cv, metric = 'mape')
-```
-
 ## Other EDA (Below code works, but call_day doesn't have 730 rows)
 
 ```{r}
 #09/26
 
-ts2014 <- subset(ts, ds <= as.POSIXct('2014-12-31  '))
-ts2015 <- subset(ts, ds > as.POSIXct('2014-12-31 '))
+call_day <- callsbyday
 
-#The number of call by day, month
-Date<- format(as.POSIXct(strptime(calls$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m-%d")
-Month<- format(as.POSIXct(strptime(calls$call_start_dttm,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y-%m")
-calls$date <- Date
-calls$month<- Month
-
-call_day <- calls %>%
-  group_by(date) %>%
-  summarise(y = n())
 # Calls trend by date
 ggplot(call_day, aes(call_day$date,call_day$y))+
   geom_point()
