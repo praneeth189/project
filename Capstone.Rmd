@@ -102,6 +102,16 @@ lagged2015$lagyearpcterror<-lagged2015$lagyearerror/lagged2015$y
 lag1MAPE<-mean(abs(lagged2015$lag1pcterror))
 lagyearMAPE<-mean(abs(lagged2015$lagyearpcterror))
 
+#Prediction
+lagged2015$month<-months(as.Date(lagged2015$date))
+
+lagged2015_december<-lagged2015%>%
+ filter(month=="December")%>%
+ select(date, y, ylagyear)
+```
+
+## Plots for naive model
+```{r}
 #Plotting 1-day Lagged Forecast
 ggplot(lagged2015, aes(date, y))+
  geom_line()+
@@ -117,6 +127,16 @@ ggplot(lagged2015, aes(date, y))+
  geom_line()+
  geom_line(aes(y=ylagyear), color= "blue")+
  ggtitle("1-Year Lagged Naive Model")+
+ xlab("Date")+
+ ylab("Number of Calls")+
+ theme_minimal()+
+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+ 
+ #December Predictions
+ggplot(lagged2015_december, aes(date, ylagyear))+
+ geom_line(color="blue")+
+ geom_line(aes(date, y))+
+ ggtitle("Predicted calls in December 2015 Using 1-Year Lagged Model")+
  xlab("Date")+
  ylab("Number of Calls")+
  theme_minimal()+
@@ -447,22 +467,11 @@ mean(calls2015num$change) #2734.126 Mean absolute error
 ## Other EDA (Below code works, but call_day doesn't have 730 rows)
 
 ```{r}
-#09/26
-
 call_day <- callsbyday
 
 # Calls trend by date
 ggplot(call_day, aes(call_day$date,call_day$y))+
   geom_point()
-
-call_month <- calls %>%
-  group_by(month) %>%
-  summarise(y = n())
-call_month
-
-# Calls by month not working
-ggplot(call_month, aes(call_month$month,call_month$y)) +
-  geom_line()
 
 # number of calls per incident
 call_incdnt <- readRDS("data/rdas/call_incdnt.rda")
@@ -471,7 +480,7 @@ call_incident_combined <-left_join(call_incdnt, calls, by = "call_id")
 call_per_incident <- call_incident_combined %>%
   group_by(incdnt_id) %>%
   summarise(number_of_calls = n())
-summary(incident_per_call) # Mean = 1.201
+summary(call_per_incident) # Mean = 1.201
 
 # number of incidents per call
 incident_per_call <- call_incident_combined %>%
