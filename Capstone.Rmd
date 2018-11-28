@@ -253,7 +253,7 @@ ggplot(callsbyday, aes(x=date, y=y, color = year)) +
 ```{r}
 calls <- readRDS("data/rdas/calls.rda")
 
-daily_ib_calls_2014 <- calls %>% 
+daily_ib_calls <- calls %>% 
   filter(year(call_start_dttm) == 2014) %>% 
   count(dt = floor_date(call_start_dttm, "1 day"))
 
